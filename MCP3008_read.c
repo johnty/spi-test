@@ -20,31 +20,52 @@ int readadc(adcnum)
 
 int main(int argc, char *argv[])
 {
-    int i, chan;
+    int i, delay_ms;
     uint32_t x1;
+    int print_output;
  
     printf ("SPI test program\n") ;
     // initialize the WiringPi API
     if (wiringPiSPISetup (0, 1000000) < 0)
         return -1 ;
+
+    if (argc>2)
+        print_output = 0;
+    else
+        print_output = 1;
  
     // get the channel to read, default to 0
     if (argc>1)
-        chan = atoi(argv[1]);
+        delay_ms = atoi(argv[1]);
     else
-        chan = 0; //we don't use this here...
-        
+        delay_ms = 1; //we don't use this here...
+    int counter_wrap = 100;
+    if (delay_ms != 0) counter_wrap = 500/delay_ms;
+    int counter = 0;    
     // run until killed with Ctrl-C
     while (1)
     {
+        counter++;
         // read data and add to total
         int chan;
         for (chan = 0; chan<8; chan++)
         {
             x1 = readadc(chan);
-            printf("CH %i val= %d  ", chan, x1);
+	    if (print_output)
+            {
+		if (counter > counter_wrap)
+		{
+		    printf("CH %i val= %d  ", chan, x1);
+		}
+            }
         }
-        printf("\n");
+        if (counter > counter_wrap)
+        {
+            if (print_output)
+		printf("\n");
+            counter = 0;
+        }
+        delay(delay_ms);
     }
     return 0 ;
 }
